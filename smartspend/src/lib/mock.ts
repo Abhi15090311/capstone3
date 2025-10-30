@@ -1,4 +1,3 @@
-// src/lib/mock.ts
 import type { Transaction, Bill, Category, Insight, Achievement, NWG } from './types'
 
 // -------------------- YOUR DATA (unchanged) --------------------
@@ -7,13 +6,16 @@ export const transactions: Transaction[] = [
   { id:"t2", type:"expense", amount:62.00, occurred_at:"2025-09-27T19:20:00Z", merchant:"GroceryMart", category:"Groceries",     nwg:"Need", late_night:false, mood:"neutral" },
   { id:"t3", type:"income",  amount:1200.00,occurred_at:"2025-09-25T08:00:00Z", merchant:"Payroll",     category:"Income",        nwg:null,   late_night:false, mood:null },
   { id:"t4", type:"expense", amount:19.99, occurred_at:"2025-09-26T22:45:00Z", merchant:"Netflix",     category:"Subscriptions", nwg:"Want", late_night:true,  mood:"neutral" },
-  { id:"t5", type:"expense", amount:45.00, occurred_at:"2025-09-24T12:10:00Z", merchant:"Uber",        category:"Transport",     nwg:"Need", late_night:false, mood:"stressed" }
+  { id:"t5", type:"expense", amount:45.00, occurred_at:"2025-09-24T12:10:00Z", merchant:"Uber",        category:"Transport",     nwg:"Need", late_night:false, mood:"stressed" },
+  // NEW GUILT EXPENSE FOR THIS MONTH
+  { id:"t6", type:"expense", amount:18.50, occurred_at:"2025-10-07T18:30:00Z", merchant:"LateNightSnacks", category:"Impulse", nwg:"Guilt", late_night:true, mood:"impulse", note:"" }
 ]
 
 export const bills: Bill[] = [
   { id:'b1', name:'Rent',        amount:800, cadence:'monthly', next_due:'2025-10-01', category:'Housing',   nwg:'Need' },
   { id:'b2', name:'Electricity', amount:60,  cadence:'monthly', next_due:'2025-10-04', category:'Utilities', nwg:'Need' },
-  { id:'b3', name:'Gym',         amount:45,  cadence:'monthly', next_due:'2025-10-08', category:'Health',    nwg:'Want' }
+  { id:'b3', name:'Gym',         amount:45,  cadence:'monthly', next_due:'2025-10-08', category:'Health',    nwg:'Need' },
+  { id:'b1', name:'Dinner',         amount:800, cadence:'monthly', next_due:'2025-10-01', category:'Housing',   nwg:'Guilt' }
 ]
 
 export const categories: Category[] = [
@@ -42,17 +44,16 @@ export const runway = {
   days_left_power_save:48,
   goal_days:45
 }
+
 // -----------------------------------------------------------------
 
 // ===== Derived helpers =====
 
-// Category -> NWG map from your `categories` list
 export const CATEGORY_TO_NWG: Record<string, NWG> = categories.reduce((acc, c) => {
   acc[c.name] = c.nwg
   return acc
 }, {} as Record<string, NWG>)
 
-// Unique category names (from transactions + categories), keep "Income" available
 export const CATEGORIES: string[] = Array.from(
   new Set([
     ...transactions.map(t => t.category),

@@ -30,14 +30,14 @@ export default function AdjustGoalModal({
         </div>
 
         <p className="mb-3 text-sm text-gray-600">
-          Choose a runway target between <b>15</b> and <b>90</b> days.
+          Choose a runway target between <b>1</b> and <b>30</b> days.
         </p>
 
         <div className="mb-4">
           <input
             type="range"
-            min={15}
-            max={90}
+            min={1}
+            max={30}
             value={days}
             onChange={(e)=>setDays(Number(e.target.value))}
             className="w-full"

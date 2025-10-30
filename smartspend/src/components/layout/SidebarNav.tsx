@@ -5,6 +5,7 @@ import {
   CreditCard,
   BarChart2,
   Target,
+  Award, // Use this as Accumulates icon
 } from 'lucide-react'
 
 export default function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
@@ -14,6 +15,7 @@ export default function SidebarNav({ onNavigate }: { onNavigate?: () => void }) 
     { to: '/bills', icon: CreditCard, label: 'Bills' },
     { to: '/insights', icon: BarChart2, label: 'Insights' },
     { to: '/goals', icon: Target, label: 'Goals' },
+    { to: '/accumulates', icon: Award, label: 'Accumulates' }, // New item below Goals
   ]
 
   return (

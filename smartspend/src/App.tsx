@@ -17,6 +17,8 @@ import Transactions from '@/pages/Transactions'
 import Bills from '@/pages/Bills'
 import Insights from '@/pages/Insights'
 import Goals from '@/pages/Goals'
+import Accumulates from '@/pages/accumulates'
+
 
 // Profile center (no Categories per your request)
 import ProfilePage from '@/pages/profile/Profile'
@@ -56,6 +58,8 @@ export default function App() {
       <Route path="/bills" element={<ProtectedRoute element={<Bills />} />} />
       <Route path="/insights" element={<ProtectedRoute element={<Insights />} />} />
       <Route path="/goals" element={<ProtectedRoute element={<Goals />} />} />
+      <Route path="/accumulates" element={<ProtectedRoute element={<Accumulates />} />} />
+
 
       {/* Profile menu routes */}
       <Route path="/profile" element={<ProtectedRoute element={<ProfilePage />} />} />
@@ -67,4 +71,3 @@ export default function App() {
     </Routes>
   )
 }
-

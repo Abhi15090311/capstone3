@@ -10,6 +10,14 @@ export default function Balance() {
   const [amt, setAmt] = useState('0')
   const nav = useNavigate()
 
+  // Save balance and proceed
+  const handleContinue = () => {
+    // Save entered balance to localStorage
+    localStorage.setItem('currentBalance', amt)
+    setOnboarding('pay')
+    nav('/onboarding/pay-cadence')
+  }
+
   return (
     <OBShell>
       <OBProgress step={1} />
@@ -19,19 +27,14 @@ export default function Balance() {
       </h1>
 
       <div className="mx-auto mb-7 w-full max-w-lg">
-        <CurrencyInput value={amt} onChange={(e) => setAmt(e.target.value)} />
+        <CurrencyInput value={amt} onChange={e => setAmt(e.target.value)} />
         <p className="mt-3 text-center text-sm text-gray-600">
           We’ll start tracking from here. You can update anytime.
         </p>
       </div>
 
       <div className="mx-auto w-full max-w-lg">
-        <PrimaryCTA
-          onClick={() => {
-            setOnboarding('pay')
-            nav('/onboarding/pay-cadence')
-          }}
-        >
+        <PrimaryCTA onClick={handleContinue}>
           Continue
         </PrimaryCTA>
       </div>

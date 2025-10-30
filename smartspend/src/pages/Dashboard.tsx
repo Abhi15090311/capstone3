@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import AppLayout from '@/components/layout/AppLayout'
-import { BalanceCard, DailyBurnCard, DaysLeftCard } from '@/components/dashboard/KpiCards'
+import { BalanceCard, DailyBurnCard, DaysLeftCard , Next7DaysBurnCard} from '@/components/dashboard/KpiCards'
 import BurnRateChart from '@/components/dashboard/BurnRateChart'
 import NWGPie from '@/components/dashboard/NWGPie'
 import InsightsPreview from '@/components/dashboard/InsightsPreview'
@@ -35,7 +35,8 @@ const burnData = Array.from({ length: 14 }).map((_, i) => ({
 }))
 
 export default function Dashboard() {
-  const [range, setRange] = useState<Range>('today')
+  // Default to "Week" (7d)
+  const [range, setRange] = useState<Range>('7d')
 
   // Aggregate NWG for selected range (expenses only)
   const nwgRows = useMemo(() => {
@@ -57,19 +58,19 @@ export default function Dashboard() {
   return (
     <AppLayout>
       {/* KPI Row */}
-      <div className="grid gap-3 md:grid-cols-3">
+      <div className="grid gap-3 md:grid-cols-4">
         <BalanceCard />
         <DaysLeftCard />
         <DailyBurnCard />
+        <Next7DaysBurnCard />
       </div>
 
       {/* Row 2: Burn chart + NWG with range toggle */}
       <div className="mt-2 grid gap-3 md:grid-cols-3">
         <Card className="md:col-span-2">
-          <CardTitle>Burn Rate</CardTitle>
+          <CardTitle>Daily Burn</CardTitle>
           <BurnRateChart data={burnData} />
         </Card>
-
         <Card>
           <div className="mb-2 flex items-center justify-between">
             <CardTitle>Need/Want/Guilt</CardTitle>

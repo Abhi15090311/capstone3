@@ -1,7 +1,8 @@
 // src/lib/types.ts
 
 export type NWG = 'Need' | 'Want' | 'Guilt'
-export type Mood = 'happy' | 'neutral' | 'stressed' | 'impulse'
+export type Mood = 'happy' | 'neutral' | 'impulse' | 'stressed' | 'sad'
+
 
 export type Transaction = {
   id: string

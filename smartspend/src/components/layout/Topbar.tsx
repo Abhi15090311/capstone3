@@ -1,3 +1,4 @@
+import { Bell } from 'lucide-react'
 import ProfileMenu from '@/components/profile/ProfileMenu'
 
 export default function Topbar({ onMenuToggle }: { onMenuToggle?: () => void }) {
@@ -17,18 +18,24 @@ export default function Topbar({ onMenuToggle }: { onMenuToggle?: () => void }) 
               <span className="block h-[2px] w-5 bg-gray-800" />
             </span>
           </button>
-
           {/* Brand */}
           <div className="flex items-center gap-2">
-             <div className="grid h-9 w-9 place-items-center rounded-xl bg-brand-100 overflow-hidden ring-1 ring-brand-200/60">
-            <img src="/logo.png" alt="SmartSpend logo" className="h-9 w-9 object-contain" />
-          </div>
+            <div className="grid h-9 w-9 place-items-center rounded-xl bg-brand-100 overflow-hidden ring-1 ring-brand-200/60">
+              <img src="/logo.png" alt="SmartSpend logo" className="h-9 w-9 object-contain" />
+            </div>
             <span className="text-lg font-semibold">SmartSpend</span>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          <button className="btn-primary hidden sm:inline-flex">+ Expense</button>
+          {/* Notification bell icon */}
+          <button
+            type="button"
+            aria-label="Notifications"
+            className="grid h-10 w-10 place-items-center rounded-xl border border-soft bg-white shadow-sm hover:bg-brand-100 transition"
+          >
+            <Bell size={20} className="text-gray-500" />
+          </button>
           <ProfileMenu />
         </div>
       </div>

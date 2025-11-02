@@ -15,7 +15,7 @@ export default function ProfileMenu() {
   const items: ItemDef[] = [
     { label: 'Profile', to: '/profile' },
     { label: 'Notifications', to: '/profile/notifications' },
-    { label: 'Goal Preferences', to: '/profile/goals' },
+    
     { label: '—divider—' },
     { label: 'Logout', action: () => { clearUser(); nav('/login', { replace: true }) }, destructive: true },
   ]

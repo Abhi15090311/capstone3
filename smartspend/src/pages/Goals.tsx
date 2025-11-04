@@ -97,11 +97,7 @@ export default function GoalsPage() {
         {/* Header + range pills */}
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <h1 className="text-xl font-semibold">Goals & Achievements</h1>
-          <div className="flex items-center gap-2">
-            {pill('week', 'Week')}
-            {pill('month', 'Month')}
-            {pill('all', 'All-time')}
-          </div>
+      
         </div>
 
         {/* Summary strip */}
@@ -135,22 +131,7 @@ export default function GoalsPage() {
 
         {/* A. Goal tracker + chart */}
         <section className="mb-4 grid gap-4 lg:grid-cols-3">
-          <div className="rounded-2xl border border-soft bg-white p-4 shadow-card lg:col-span-1">
-            <div className="mb-1 flex items-center gap-2">
-              <Zap size={18} className="text-brand-500" />
-              <h2 className="font-semibold">Runway Goal — {goal} days</h2>
-            </div>
-            <p className="mb-3 text-sm text-gray-600">
-              You’re at <span className="font-medium">{currentRegular} days</span> right now.
-              Power-Save could take you to <span className="font-medium">{powerSave} days</span> (+{psDelta}).
-            </p>
-            <div className="mb-3 h-2 w-full overflow-hidden rounded-full bg-gray-100">
-              <div className="h-full rounded-full bg-brand-500" style={{ width: `${pctToGoal}%` }} />
-            </div>
-            <div className="text-xs text-gray-600">
-              Tip: Reducing <b>Wants</b> & <b>Guilt</b> by ~30% often adds <b>+3–7 days</b>.
-            </div>
-          </div>
+          
 
           <div className="rounded-2xl border border-soft bg-white p-4 shadow-card lg:col-span-2">
             <div className="mb-2 flex items-center gap-2">
@@ -222,32 +203,7 @@ export default function GoalsPage() {
         </section>
 
         {/* C. Bonus comparison chart */}
-        <section className="grid gap-4 lg:grid-cols-2">
-          <div className="rounded-2xl border border-soft bg-white p-4 shadow-card">
-            <div className="mb-2 font-semibold">Regular vs Power-Save ({timeRange === 'week' ? '7d' : timeRange === 'month' ? '30d' : '120d'})</div>
-            <div className="h-48 w-full">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={displayedHistory} margin={{ left: 8, right: 8 }}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="d" tickLine={false} />
-                  <YAxis width={30} tickLine={false} />
-                  <Tooltip />
-                  <Line type="monotone" dataKey="regular" stroke="#E25D37" dot={false} />
-                  <Line type="monotone" dataKey="power" stroke="#10B981" dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-
-          <div className="rounded-2xl border border-soft bg-white p-4 shadow-card">
-            <div className="mb-2 font-semibold">Recommendations</div>
-            <ul className="space-y-2 text-sm">
-              <li className="rounded-xl bg-cream px-3 py-2"><b>No-Wants Weekend</b> → potential <b>+2 days</b> runway.</li>
-              <li className="rounded-xl bg-cream px-3 py-2">Pause one subscription for a month → <b>+3 days</b>.</li>
-              <li className="rounded-xl bg-cream px-3 py-2">Log moods with spends for a week → unlock <b>Silver Saver</b>.</li>
-            </ul>
-          </div>
-        </section>
+    
       </div>
 
       {/* Modals */}

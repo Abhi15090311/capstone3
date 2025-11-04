@@ -2,13 +2,13 @@ import type { Transaction, Bill, Category, Insight, Achievement, NWG } from './t
 
 // -------------------- YOUR DATA (unchanged) --------------------
 export const transactions: Transaction[] = [
-  { id:"t1", type:"expense", amount:12.50, occurred_at:"2025-09-28T23:10:00Z", merchant:"Starbucks",  category:"Dining",        nwg:"Want", late_night:true,  mood:"impulse", note:"" },
-  { id:"t2", type:"expense", amount:62.00, occurred_at:"2025-09-27T19:20:00Z", merchant:"GroceryMart", category:"Groceries",     nwg:"Need", late_night:false, mood:"neutral" },
-  { id:"t3", type:"income",  amount:1200.00,occurred_at:"2025-09-25T08:00:00Z", merchant:"Payroll",     category:"Income",        nwg:null,   late_night:false, mood:null },
-  { id:"t4", type:"expense", amount:19.99, occurred_at:"2025-09-26T22:45:00Z", merchant:"Netflix",     category:"Subscriptions", nwg:"Want", late_night:true,  mood:"neutral" },
-  { id:"t5", type:"expense", amount:45.00, occurred_at:"2025-09-24T12:10:00Z", merchant:"Uber",        category:"Transport",     nwg:"Need", late_night:false, mood:"stressed" },
+  { id:"t1", type:"expense", amount:12.50, occurred_at:"2025-09-28T23:10:00Z", merchant:"Starbucks",  time:"Dining",        nwg:"Want", late_night:true,  mood:"impulse", note:"" },
+  { id:"t2", type:"expense", amount:62.00, occurred_at:"2025-09-27T19:20:00Z", merchant:"GroceryMart",  time:"Dining",     nwg:"Need", late_night:false, mood:"neutral" },
+  { id:"t3", type:"income",  amount:1200.00,occurred_at:"2025-09-25T08:00:00Z", merchant:"Payroll",      time:"Dining",        nwg:null,   late_night:false, mood:null },
+  { id:"t4", type:"expense", amount:19.99, occurred_at:"2025-09-26T22:45:00Z", merchant:"Netflix",     time:"Dining", nwg:"Want", late_night:true,  mood:"neutral" },
+  { id:"t5", type:"expense", amount:45.00, occurred_at:"2025-09-24T12:10:00Z", merchant:"Uber",         time:"Dining",     nwg:"Need", late_night:false, mood:"stressed" },
   // NEW GUILT EXPENSE FOR THIS MONTH
-  { id:"t6", type:"expense", amount:18.50, occurred_at:"2025-10-07T18:30:00Z", merchant:"LateNightSnacks", category:"Impulse", nwg:"Guilt", late_night:true, mood:"impulse", note:"" }
+  { id:"t6", type:"expense", amount:18.50, occurred_at:"2025-10-07T18:30:00Z", merchant:"LateNightSnacks", time:"Impulse", nwg:"Guilt", late_night:true, mood:"impulse", note:"" }
 ]
 
 export const bills: Bill[] = [
@@ -56,7 +56,7 @@ export const CATEGORY_TO_NWG: Record<string, NWG> = categories.reduce((acc, c) =
 
 export const CATEGORIES: string[] = Array.from(
   new Set([
-    ...transactions.map(t => t.category),
+    
     ...categories.map(c => c.name),
     'Income',
   ])

@@ -7,8 +7,8 @@ import { useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 
 const opts = ['Weekly','Bi-weekly','Monthly']
-const weekDays = ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday']
-const days = Array.from({ length: 30 }, (_, i) => String(i + 1))
+const weekDays = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
+const days = Array.from({ length: 31 }, (_, i) => String(i + 1))
 
 export default function PayCadence() {
   const [sel, setSel] = useState<string | undefined>()
@@ -24,7 +24,7 @@ export default function PayCadence() {
 
   let modalOpts: {label: string, options: string[]} = { label: '', options: [] }
   if (sel === 'Weekly') modalOpts = { label: 'Select your usual weekday:', options: weekDays }
-  if (sel === 'Monthly' || sel === 'Bi-weekly') modalOpts = { label: 'Select your usual pay date:', options: days }
+  if (sel === 'Monthly' || sel === 'Bi-weekly') modalOpts = { label: 'Select your last pay date:', options: days }
 
   return (
     <OBShell>

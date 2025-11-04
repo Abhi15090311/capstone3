@@ -6,61 +6,104 @@ import { setOnboarding } from '@/lib/auth'
 import { useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 
-// Default main bill types
 const defaults = ['Rent', 'Phone', 'Internet', 'Subscriptions', 'Others']
-// Dropdown options for 'Others'
 const otherOptions = ['Groceries', 'Insurance', 'Tuition', 'Medical', 'Childcare']
 
-// Type for custom bills
-type CustomBill = {
+type BillData = {
   label: string
   amount: string
+  day: string
 }
 
 export default function BillsOB() {
   const [chosen, setChosen] = useState<string[]>([])
   const [otherChosen, setOtherChosen] = useState<string[]>([])
-  const [customBills, setCustomBills] = useState<CustomBill[]>([])
+  const [billValues, setBillValues] = useState<Record<string, BillData>>({})
+  const [customBills, setCustomBills] = useState<BillData[]>([])
   const [customLabel, setCustomLabel] = useState('')
   const [customAmount, setCustomAmount] = useState('')
+  const [customDay, setCustomDay] = useState('1')
+  const [activeBill, setActiveBill] = useState<null | { label: string }>(null)
 
   const nav = useNavigate()
+  const numDays = Array.from({ length: 31 }, (_, i) => (i + 1).toString())
 
-  const toggle = (x: string) =>
-    setChosen(s => s.includes(x) ? s.filter(i => i !== x) : [...s, x])
+  // ✅ Handle clicking any pill (main or other)
+  function handleBillPill(x: string) {
+    if (x === 'Others') {
+      // Just expand more options, don't open popup
+      if (!chosen.includes('Others')) {
+        setChosen(c => [...c, 'Others'])
+      }
+      return
+    }
 
-  const toggleOther = (x: string) =>
-    setOtherChosen(s => s.includes(x) ? s.filter(i => i !== x) : [...s, x])
+    // Otherwise, open popup for details
+    setActiveBill({ label: x })
+    const d = billValues[x]
+    setCustomLabel(x)
+    setCustomAmount(d?.amount ?? '')
+    setCustomDay(d?.day ?? '1')
 
-  function handleAddCustom() {
-    if (!customLabel.trim() || !customAmount.trim()) return
-    setCustomBills(bills => [
-      ...bills,
-      { label: customLabel.trim(), amount: customAmount }
-    ])
+    // Add to selection if not already present
+    if (defaults.includes(x) && !chosen.includes(x)) {
+      setChosen(c => [...c, x])
+    }
+    if (otherOptions.includes(x) && !otherChosen.includes(x)) {
+      setOtherChosen(o => [...o, x])
+    }
+  }
+
+  // ✅ Save popup data
+  function savePopup() {
+    if (!customLabel.trim() || !customAmount.trim() || !customDay.trim()) return
+    setBillValues(v => ({
+      ...v,
+      [customLabel]: { label: customLabel, amount: customAmount, day: customDay }
+    }))
+    if (defaults.includes(customLabel) && !chosen.includes(customLabel)) {
+      setChosen(c => [...c, customLabel])
+    }
+    if (otherOptions.includes(customLabel) && !otherChosen.includes(customLabel)) {
+      setOtherChosen(o => [...o, customLabel])
+    }
+    setActiveBill(null)
     setCustomLabel('')
     setCustomAmount('')
+    setCustomDay('1')
   }
 
+  // ✅ Add custom (typed) bill
+  function handleAddCustom() {
+    if (!customLabel.trim() || !customAmount.trim() || !customDay.trim()) return
+    setCustomBills(bills => [
+      ...bills,
+      { label: customLabel.trim(), amount: customAmount, day: customDay }
+    ])
+    setBillValues(vals => ({
+      ...vals,
+      [customLabel]: { label: customLabel.trim(), amount: customAmount, day: customDay }
+    }))
+    setCustomLabel('')
+    setCustomAmount('')
+    setCustomDay('1')
+  }
+
+  // ✅ Remove custom bill
   function handleRemoveCustom(label: string) {
     setCustomBills(bills => bills.filter(b => b.label !== label))
+    setBillValues(vals => {
+      const copy = { ...vals }
+      delete copy[label]
+      return copy
+    })
   }
 
+  // ✅ Finish onboarding
   function handleFinish() {
-  const originalBalance = Number(localStorage.getItem('smartspend.original_balance')) || 0
-  const currentBalanceStr = localStorage.getItem('currentBalance')
-  const currentBalance = currentBalanceStr ? Number(currentBalanceStr) : originalBalance
-
-  // Count all selected + otherChosen if Others is selected
-  const selectedCount = chosen.filter(x => x !== 'Others').length +
-    (chosen.includes('Others') ? otherChosen.length + customBills.length : 0)
-  const estimatedTotal = selectedCount * 100
-  const newBalance = Math.max(currentBalance - estimatedTotal, 0)
-  localStorage.setItem('currentBalance', String(newBalance))
-  setOnboarding('done')
-  nav('/dashboard') // <-- send to dashboard, not onboarding/summary
-}
-
+    setOnboarding('done')
+    nav('/login')
+  }
 
   return (
     <OBShell>
@@ -69,24 +112,49 @@ export default function BillsOB() {
         Any regular bills we should plan for?
       </h1>
 
-      {/* Bill options */}
+      {/* Default bill options */}
       <div className="mx-auto grid max-w-sm grid-cols-2 gap-3">
         {defaults.map(x => (
-          <Pill key={x} active={chosen.includes(x)} onClick={() => toggle(x)}>{x}</Pill>
+          <Pill
+            key={x}
+            active={chosen.includes(x)}
+            onClick={() => handleBillPill(x)}
+          >
+            {x}
+            {billValues[x]?.amount && (
+              <span className="ml-1 text-xs text-gray-600">
+                (${billValues[x].amount}), Day {billValues[x].day}
+              </span>
+            )}
+          </Pill>
         ))}
       </div>
 
-      {/* Others Sub-dropdown + custom input */}
+      {/* "Others" additional options */}
       {chosen.includes('Others') && (
-        <div className="mx-auto mt-3 max-w-sm flex flex-col items-center">
-          <div className="mb-2 text-sm text-gray-700">Select additional types:</div>
-          <div className="grid grid-cols-2 gap-2 w-full mb-2">
+        <div className="mx-auto mt-4 max-w-sm flex flex-col items-center">
+          <div className="mb-2 text-sm text-gray-700">
+            Select additional bill types:
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 w-full mb-3">
             {otherOptions.map(opt => (
-              <Pill key={opt} active={otherChosen.includes(opt)}
-                onClick={() => toggleOther(opt)}>{opt}</Pill>
+              <Pill
+                key={opt}
+                active={otherChosen.includes(opt)}
+                onClick={() => handleBillPill(opt)}
+              >
+                {opt}
+                {billValues[opt]?.amount && (
+                  <span className="ml-1 text-xs text-gray-600">
+                    (${billValues[opt].amount}), Day {billValues[opt].day}
+                  </span>
+                )}
+              </Pill>
             ))}
           </div>
-          {/* Custom entry section */}
+
+          {/* Add completely custom bill */}
           <div className="w-full flex flex-col gap-1 mb-2">
             <div className="flex gap-2">
               <input
@@ -97,13 +165,22 @@ export default function BillsOB() {
                 onChange={e => setCustomLabel(e.target.value)}
               />
               <input
-                className="w-24 rounded border px-2 py-1 text-sm"
+                className="w-20 rounded border px-2 py-1 text-sm"
                 type="number"
                 min={0}
                 placeholder="Amount"
                 value={customAmount}
                 onChange={e => setCustomAmount(e.target.value)}
               />
+              <select
+                className="w-20 rounded border px-2 py-1 text-sm"
+                value={customDay}
+                onChange={e => setCustomDay(e.target.value)}
+              >
+                {numDays.map(d => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
+              </select>
               <button
                 className="px-3 py-1 rounded bg-orange-200 hover:bg-orange-300 text-orange-900 font-medium text-sm"
                 type="button"
@@ -112,13 +189,20 @@ export default function BillsOB() {
                 Add
               </button>
             </div>
-            {/* List custom entries as tags, allow removal */}
-            <div className="flex flex-wrap gap-2 mt-1">
+
+            <div className="flex flex-wrap gap-2 mt-2">
               {customBills.map(bill => (
-                <span key={bill.label} className="inline-flex items-center rounded bg-orange-50 border border-orange-200 px-2 py-1 text-sm text-orange-900">
-                  {bill.label} (${bill.amount})
-                  <button className="ml-1 text-orange-700 focus:outline-none"
-                    onClick={() => handleRemoveCustom(bill.label)}>×</button>
+                <span
+                  key={bill.label}
+                  className="inline-flex items-center rounded bg-orange-50 border border-orange-200 px-2 py-1 text-sm text-orange-900"
+                >
+                  {bill.label} (${bill.amount}) Day {bill.day}
+                  <button
+                    className="ml-1 text-orange-700 focus:outline-none"
+                    onClick={() => handleRemoveCustom(bill.label)}
+                  >
+                    ×
+                  </button>
                 </span>
               ))}
             </div>
@@ -126,14 +210,62 @@ export default function BillsOB() {
         </div>
       )}
 
-      <p className="mx-auto mt-4 max-w-sm text-center text-sm text-gray-600">
-        You can skip this now and add later.
-      </p>
+      {/* Popup for entering amount and day */}
+      {activeBill && (
+        <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/30">
+          <div className="bg-white rounded-2xl p-5 shadow-md min-w-[320px]">
+            <h2 className="mb-3 text-lg font-semibold">
+              Enter details for {activeBill.label}
+            </h2>
+            <div className="flex flex-col gap-3">
+              <input
+                className="rounded border px-3 py-2 text-sm"
+                type="number"
+                min={0}
+                placeholder="Amount"
+                value={customAmount}
+                onChange={e => setCustomAmount(e.target.value)}
+                autoFocus
+              />
+              <select
+                className="rounded border px-3 py-2 text-sm"
+                value={customDay}
+                onChange={e => setCustomDay(e.target.value)}
+              >
+                {numDays.map(d => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
+              </select>
+              <div className="flex gap-3 justify-end mt-2">
+                <button
+                  className="px-4 py-1 rounded bg-brand-500 text-white hover:bg-brand-600"
+                  type="button"
+                  onClick={savePopup}
+                >
+                  Save
+                </button>
+                <button
+                  className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300"
+                  type="button"
+                  onClick={() => setActiveBill(null)}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Footer navigation */}
+     
       <div className="mx-auto mt-6 max-w-sm">
         <PrimaryCTA onClick={handleFinish}>Finish</PrimaryCTA>
       </div>
       <div className="mt-2">
-        <LinkCTA onClick={() => nav('/dashboard')}>Skip</LinkCTA>
+        <LinkCTA onClick={() => nav('/onboarding/pay-cadence')}>
+          Back
+        </LinkCTA>
       </div>
     </OBShell>
   )

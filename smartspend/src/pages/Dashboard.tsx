@@ -17,9 +17,7 @@ function isWithinRange(iso: string, range: Range) {
   const d = new Date(iso)
   const now = new Date()
   const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-
   if (range === 'today') return d >= startToday
-
   const days = range === '7d' ? 7 : 30
   const from = new Date(startToday)
   from.setDate(from.getDate() - (days - 1))
@@ -28,15 +26,20 @@ function isWithinRange(iso: string, range: Range) {
   return d >= from && d < until
 }
 
-// simple demo burn series
-const burnData = Array.from({ length: 14 }).map((_, i) => ({
+// Create burnData for 31 days (simulate demo numbers)
+const burnData = Array.from({ length: 31 }).map((_, i) => ({
   day: String(i + 1),
-  spend: 70 + (i % 3) * 10 + (i > 6 ? 12 : 0),
+  spend: 70 + (i % 5) * 8 + (i > 15 ? 17 : 0),
 }))
+
+const DAYS_PER_PAGE = 7
 
 export default function Dashboard() {
   // Default to "Week" (7d)
   const [range, setRange] = useState<Range>('7d')
+  // Any 7-day range between 1–31
+  const [burnPage, setBurnPage] = useState(0)
+  const maxPage = Math.ceil(burnData.length / DAYS_PER_PAGE) - 1
 
   // Aggregate NWG for selected range (expenses only)
   const nwgRows = useMemo(() => {
@@ -55,6 +58,12 @@ export default function Dashboard() {
     }))
   }, [range])
 
+  // Only show 7 days at a time, paginated by burnPage
+  const burnSlice = burnData.slice(
+    burnPage * DAYS_PER_PAGE,
+    burnPage * DAYS_PER_PAGE + DAYS_PER_PAGE
+  )
+
   return (
     <AppLayout>
       {/* KPI Row */}
@@ -68,8 +77,16 @@ export default function Dashboard() {
       {/* Row 2: Burn chart + NWG with range toggle */}
       <div className="mt-2 grid gap-3 md:grid-cols-3">
         <Card className="md:col-span-2">
-          <CardTitle>Daily Burn</CardTitle>
-          <BurnRateChart data={burnData} />
+          <CardTitle>
+            Daily Burn
+          </CardTitle>
+         <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300" style={{ width: '100%' }}>
+  <div style={{ minWidth: burnData.length * 56 }} className="flex">
+    <BurnRateChart data={burnData} />
+  </div>
+</div>
+
+          
         </Card>
         <Card>
           <div className="mb-2 flex items-center justify-between">

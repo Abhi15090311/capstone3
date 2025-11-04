@@ -2,6 +2,23 @@ import { useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { clearUser } from '@/lib/auth'
 
+// Helper to get current user from storage
+function getCurrentUser() {
+  try {
+    return JSON.parse(localStorage.getItem('user') || '{}')
+  } catch {
+    return {}
+  }
+}
+function getInitials(name: string | undefined) {
+  if (!name) return 'U'
+  return name
+    .split(' ')
+    .map((s) => s[0]?.toUpperCase())
+    .join('')
+    .slice(0, 2) || 'U'
+}
+
 type ItemDef = { label: string; to?: string; action?: () => void; destructive?: boolean }
 
 export default function ProfileMenu() {
@@ -12,18 +29,18 @@ export default function ProfileMenu() {
   const nav = useNavigate()
   const loc = useLocation()
 
+  const user = getCurrentUser()
+  const initials = getInitials(user?.name)
+
   const items: ItemDef[] = [
     { label: 'Profile', to: '/profile' },
     { label: 'Notifications', to: '/profile/notifications' },
-    
     { label: '—divider—' },
     { label: 'Logout', action: () => { clearUser(); nav('/login', { replace: true }) }, destructive: true },
   ]
 
-  // Close on route change
   useEffect(() => { setOpen(false) }, [loc.pathname])
 
-  // Click outside to close
   useEffect(() => {
     const onDoc = (e: MouseEvent) => {
       if (!open) return
@@ -36,16 +53,13 @@ export default function ProfileMenu() {
     return () => document.removeEventListener('mousedown', onDoc)
   }, [open])
 
-  // When opening, move focus to first menuitem
   useEffect(() => {
     if (open) {
-      // Focus first actionable item
       requestAnimationFrame(() => {
         const btn = menuRef.current?.querySelector<HTMLButtonElement>('[data-mi="0"]')
         btn?.focus()
       })
     } else {
-      // Return focus to trigger
       triggerRef.current?.focus()
     }
   }, [open])
@@ -89,22 +103,21 @@ export default function ProfileMenu() {
     }
   }
 
-  // Build a flat list of actionable items for indexing
   const actionable = items.filter(i => i.label !== '—divider—')
 
   return (
     <div className="relative">
-      {/* Trigger */}
+      {/* Initials Button as Trigger */}
       <button
         ref={triggerRef}
         onClick={() => (open ? closeMenu() : openMenu())}
         onKeyDown={onTriggerKeyDown}
-        className="h-9 w-9 rounded-full border-2 border-white shadow-sm overflow-hidden focus:outline-none focus:ring-2 focus:ring-brand-300"
+        className="h-9 w-9 rounded-full border-2 border-white shadow-sm bg-cream flex items-center justify-center text-lg font-semibold text-brand-600 select-none focus:outline-none focus:ring-2 focus:ring-brand-300"
         aria-haspopup="menu"
         aria-expanded={open}
         aria-controls="profile-menu"
       >
-        <img src="https://i.pravatar.cc/48" alt="Open profile menu" className="h-full w-full object-cover" />
+        {initials}
       </button>
 
       {/* Menu */}
@@ -116,8 +129,7 @@ export default function ProfileMenu() {
           ref={menuRef}
           tabIndex={-1}
           onKeyDown={onMenuKeyDown}
-          className="absolute right-0 mt-2 w-56 rounded-2xl border border-soft bg-white p-2 shadow-card
-                     animate-[fadeIn_120ms_ease-out] origin-top-right"
+          className="absolute right-0 mt-2 w-56 rounded-2xl border border-soft bg-white p-2 shadow-card animate-[fadeIn_120ms_ease-out] origin-top-right"
         >
           {items.map((item, i) => {
             if (item.label === '—divider—') {

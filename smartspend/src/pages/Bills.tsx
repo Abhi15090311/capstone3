@@ -1,3 +1,4 @@
+
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import AppLayout from '@/components/layout/AppLayout'
@@ -139,28 +140,36 @@ export default function BillsPage() {
 
     // filtered
     const filtered = useMemo(() => {
-        let out = list.slice()
-        if (q) {
-            const s = q.toLowerCase()
-            out = out.filter(b => `${b.name} ${b.category} ${(b as any).notes ?? ''}`.toLowerCase().includes(s))
-        }
-        if (status) out = out.filter(b => ((b as any).status ?? 'active') === status)
-        if (cadence) out = out.filter(b => (b.cadence as any) === cadence)
-        if (category) out = out.filter(b => b.category === category)
-        if (nwg) out = out.filter(b => b.nwg === nwg)
-        if (due) {
-            out = out.filter(b => {
-                const d = daysFromToday(b.next_due)
-                if (due === 'today') return d === 0
-                if (due === 'next7') return d >= 0 && d <= 7
-                if (due === 'overdue') return d < 0
-                return true
-            })
-        }
-        // sort: nearest due first, then amount desc
-        out.sort((a, b) => daysFromToday(a.next_due) - daysFromToday(b.next_due) || b.amount - a.amount)
-        return out
-    }, [list, q, status, cadence, category, nwg, due])
+  let out = list.slice()
+  out = out.filter(b => b.recurrence === true)
+
+  if (q) {
+    const s = q.toLowerCase();
+    out = out.filter(
+      b => `${b.name} ${b.category} ${(b as any).notes ?? ''}`.toLowerCase().includes(s)
+    );
+  }
+  if (status) out = out.filter(b => ((b as any).status ?? 'active') === status);
+  if (cadence) out = out.filter(b => (b.cadence as any) === cadence);
+  if (category) out = out.filter(b => b.category === category);
+  if (nwg) out = out.filter(b => b.nwg === nwg);
+  if (due) {
+    out = out.filter(b => {
+      const d = daysFromToday(b.next_due);
+      if (due === 'today') return d === 0;
+      if (due === 'next7') return d >= 0 && d <= 7;
+      if (due === 'overdue') return d < 0;
+      return true;
+    });
+  }
+  out.sort(
+    (a, b) =>
+      daysFromToday(a.next_due) - daysFromToday(b.next_due) ||
+      b.amount - a.amount
+  );
+  return out;
+}, [list, q, status, cadence, category, nwg, due]);
+
 
     // actions
     const [modalOpen, setModalOpen] = useState(false)
@@ -195,57 +204,65 @@ export default function BillsPage() {
         })
     }
 
-    // Mark as paid: create a transaction today and push next_due forward by one cycle
-    function markAsPaid(b: Bill) {
-        // 1) write a transaction
-        const tx: Tx = {
-            id: crypto.randomUUID(),
-            type: 'expense',
-            amount: b.amount,
-            occurred_at: new Date().toISOString(),
-            merchant: b.name,
-            category: b.category,
-            nwg: b.nwg,
-            late_night: (() => { const h = new Date().getHours(); return h >= 22 || h < 5 })(),
-            mood: null,
-            note: 'Bill paid',
-        }
-        const txs = loadTxns()
-        const nextTxs = [tx, ...txs]; saveTxns(nextTxs)
+function markAsPaid(b: Bill) {
+  // 1) Write a transaction
+  const validNWG = (b.nwg === 'Need' || b.nwg === 'Want' || b.nwg === 'Guilt') ? b.nwg : null
 
-        // 2) advance bill.next_due to the next occurrence
-        const d0 = parseYMD(b.next_due)
-        let nextDue = new Date(d0)
-        const cadence = (b.cadence as Cadence) ?? 'monthly'
-        const every = (b as any).custom_every ?? 1
-        const unit: 'days' | 'weeks' | 'months' = (b as any).custom_unit ?? 'days'
+  const tx: Tx = {
+    id: crypto.randomUUID(),
+    type: 'expense',
+    amount: b.amount,
+    occurred_at: new Date().toISOString(),
+    merchant: b.name,
+  time: '',
+    nwg: validNWG, // ✅ Ensures correct NWG | null type
+    late_night: (() => {
+      const h = new Date().getHours()
+      return h >= 22 || h < 5
+    })(),
+    mood: null,
+    note: 'Bill paid',
+  }
 
-        if (cadence === 'weekly') nextDue.setDate(nextDue.getDate() + 7)
-        else if (cadence === 'bi-weekly') nextDue.setDate(nextDue.getDate() + 14)
-        else if (cadence === 'monthly') {
-            const day = nextDue.getDate()
-            nextDue.setMonth(nextDue.getMonth() + 1)
-            while (nextDue.getDate() < day) nextDue.setDate(nextDue.getDate() - 1)
-        } else { // custom
-            if (unit === 'days') nextDue.setDate(nextDue.getDate() + every)
-            if (unit === 'weeks') nextDue.setDate(nextDue.getDate() + every * 7)
-            if (unit === 'months') {
-                const day = nextDue.getDate()
-                nextDue.setMonth(nextDue.getMonth() + every)
-                while (nextDue.getDate() < day) nextDue.setDate(nextDue.getDate() - 1)
-            }
-        }
+  const txs = loadTxns()
+  const nextTxs = [tx, ...txs]
+  saveTxns(nextTxs)
 
-        const ymd = `${nextDue.getFullYear()}-${String(nextDue.getMonth() + 1).padStart(2, '0')}-${String(nextDue.getDate()).padStart(2, '0')}`
+  // 2) Advance bill.next_due
+  const d0 = parseYMD(b.next_due)
+  let nextDue = new Date(d0)
+  const cadence = (b.cadence as Cadence) ?? 'monthly'
+  const every = (b as any).custom_every ?? 1
+  const unit: 'days' | 'weeks' | 'months' = (b as any).custom_unit ?? 'days'
 
-        setList(prev => {
-            const i = prev.findIndex(x => x.id === b.id)
-            if (i < 0) return prev
-            const patched = { ...prev[i], next_due: ymd } as Bill
-            const next = [...prev]; next[i] = patched; saveBills(next); return next
-        })
-        // TODO: toast → “Marked paid and recorded in Transactions”
+  if (cadence === 'weekly') nextDue.setDate(nextDue.getDate() + 7)
+  else if (cadence === 'bi-weekly') nextDue.setDate(nextDue.getDate() + 14)
+  else if (cadence === 'monthly') {
+    const day = nextDue.getDate()
+    nextDue.setMonth(nextDue.getMonth() + 1)
+    while (nextDue.getDate() < day) nextDue.setDate(nextDue.getDate() - 1)
+  } else {
+    if (unit === 'days') nextDue.setDate(nextDue.getDate() + every)
+    if (unit === 'weeks') nextDue.setDate(nextDue.getDate() + every * 7)
+    if (unit === 'months') {
+      const day = nextDue.getDate()
+      nextDue.setMonth(nextDue.getMonth() + every)
+      while (nextDue.getDate() < day) nextDue.setDate(nextDue.getDate() - 1)
     }
+  }
+
+  const ymd = `${nextDue.getFullYear()}-${String(nextDue.getMonth() + 1).padStart(2, '0')}-${String(nextDue.getDate()).padStart(2, '0')}`
+
+  setList(prev => {
+    const i = prev.findIndex(x => x.id === b.id)
+    if (i < 0) return prev
+    const patched = { ...prev[i], next_due: ymd } as Bill
+    const next = [...prev]
+    next[i] = patched
+    saveBills(next)
+    return next
+  })
+}
 
     // summary banner if heavy week
     const next7Total = useMemo(() => {
@@ -272,12 +289,10 @@ export default function BillsPage() {
     return (
         <AppLayout>
             {/* Header */}
-            <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-3 px-3 py-4 sm:px-4">
-                <h1 className="text-xl font-semibold">Bills</h1>
-                <button onClick={openAdd} className="btn-primary inline-flex items-center gap-2">
-                    <Plus size={16} /> Add Bill
-                </button>
-            </div>
+     <div className="mx-auto flex max-w-[1440px] items-center justify-between gap-3 px-3 py-4 sm:px-4">
+  <h1 className="text-xl font-semibold">Bills</h1>
+</div>
+
 
             <div className="mx-auto max-w-[1440px] px-3 sm:px-4">
                 {/* Optional banner */}

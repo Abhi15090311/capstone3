@@ -6,26 +6,35 @@ export type Mood = 'happy' | 'neutral' | 'impulse' | 'stressed' | 'sad'
 
 export type Transaction = {
   id: string
-  type: 'expense' | 'income'
+  type: string
   amount: number
-  occurred_at: string // ISO
+  occurred_at: string
   merchant: string
-  category: string
+
   nwg: NWG | null
   late_night: boolean
-  mood: Mood | null
+  mood: string | null
   note?: string
+  payDay?: string 
+  time: string,  
+  // others ...
 }
+
 
 export type Bill = {
   id: string
   name: string
   amount: number
-  cadence: 'monthly' | 'weekly' | 'bi-weekly' | string
-  next_due: string // YYYY-MM-DD
   category: string
-  nwg: NWG
+  cadence: string
+  next_due: string
+  nwg?: string
+  recurrence?: boolean
+  status?: 'active' | 'paused'
+  [key: string]: any
 }
+
+
 
 export type Category = {
   id: string

@@ -144,7 +144,9 @@ export default function Insights() {
     })()
     const perMood = (() => {
       const m: Record<Mood, { sum: number; cnt: number }> = {
-        happy: { sum: 0, cnt: 0 }, neutral: { sum: 0, cnt: 0 }, impulse: { sum: 0, cnt: 0 }, stressed: { sum: 0, cnt: 0 }
+         happy: { sum: 0, cnt: 0 }, 
+  neutral: { sum: 0, cnt: 0 }, 
+  sad: { sum: 0, cnt: 0 }
       }
       tx.forEach(t => {
         if (t.type === 'expense' && t.mood && m[t.mood]) {
@@ -350,103 +352,13 @@ export default function Insights() {
         <h1 className="text-xl font-semibold">Alerts & Insights</h1>
 
         {/* Quick time range */}
-        <div className="flex items-center gap-2">
-          <div className="relative">
-            <select
-              value={range}
-              onChange={(e) => setRange(e.target.value as Range)}
-              className="appearance-none rounded-xl border border-soft bg-white px-3 py-2 pr-8 text-sm"
-            >
-              <option value="7d">Week</option>
-              <option value="30d">Month</option>
-              <option value="custom">Custom (30d)</option>
-            </select>
-            <ChevronDown size={16} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
-          </div>
-
-          <button
-            onClick={() => setFiltersOpen(o => !o)}
-            className="inline-flex items-center gap-2 rounded-xl border border-soft bg-white px-3 py-2 text-sm hover:bg-cream"
-          >
-            <Filter size={16} /> {filtersOpen ? 'Hide' : 'Show'} Filters
-          </button>
-        </div>
+        
       </div>
 
       <div className="mx-auto max-w-[1440px] px-3 sm:px-4">
 
         {/* Filters row */}
-        {filtersOpen && (
-          <div className="mb-3 grid grid-cols-12 gap-3 rounded-2xl border border-soft bg-white p-4 shadow-card md:gap-4 md:p-5">
-            {/* Type */}
-            <div className="col-span-6 sm:col-span-3">
-              <label className="mb-1 block text-xs text-gray-600">Type</label>
-              <div className="relative">
-                <select
-                  value={typ}
-                  onChange={(e) => setTyp(e.target.value as InsightType)}
-                  className="w-full appearance-none rounded-xl border border-soft bg-white px-3 py-2 pr-8"
-                >
-                  <option>All</option>
-                  <option>Spending</option>
-                  <option>Mood</option>
-                  <option>Bills</option>
-                  <option>Achievements</option>
-                </select>
-                <ChevronDown size={16} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              </div>
-            </div>
-
-            {/* Category (NWG) */}
-            <div className="col-span-6 sm:col-span-3">
-              <label className="mb-1 block text-xs text-gray-600">Category</label>
-              <div className="relative">
-                <select
-                  value={nwg}
-                  onChange={(e) => setNWG(e.target.value as any)}
-                  className="w-full appearance-none rounded-xl border border-soft bg-white px-3 py-2 pr-8"
-                >
-                  <option>All</option>
-                  <option>Need</option>
-                  <option>Want</option>
-                  <option>Guilt</option>
-                </select>
-                <ChevronDown size={16} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              </div>
-            </div>
-
-            {/* Sort */}
-            <div className="col-span-6 sm:col-span-3">
-              <label className="mb-1 block text-xs text-gray-600">Sort</label>
-              <div className="relative">
-                <select
-                  value={sort}
-                  onChange={(e) => setSort(e.target.value as SortBy)}
-                  className="w-full appearance-none rounded-xl border border-soft bg-white px-3 py-2 pr-8"
-                >
-                  <option value="newest">Newest</option>
-                  <option value="impact">Impact</option>
-                  <option value="category">Category</option>
-                </select>
-                <ChevronDown size={16} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
-              </div>
-            </div>
-
-            {/* Search */}
-            <div className="col-span-12 sm:col-span-3">
-              <label className="mb-1 block text-xs text-gray-600">Search</label>
-              <div className="relative">
-                <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                <input
-                  value={q}
-                  onChange={(e) => setQ(e.target.value)}
-                  placeholder="Search insights…"
-                  className="w-full rounded-xl border border-soft bg-cream px-9 py-2"
-                />
-              </div>
-            </div>
-          </div>
-        )}
+       
 
         {/* A. Alerts feed */}
         <SectionCard
@@ -510,22 +422,25 @@ export default function Insights() {
           </SectionCard>
 
           {/* Mood vs Spend */}
-          <SectionCard title="Mood vs Average Spend">
-            <div className="h-56">
-              <ResponsiveContainer>
-                <RBarChart data={windowed.perMood}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="mood" />
-                  <YAxis />
-                  <Tooltip formatter={(v: number) => fmtCurrency(v)} />
-                  <Bar dataKey="avg" fill="#E25D37" />
-                </RBarChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="mt-2 text-sm text-gray-600">
-              Tip: click a bar to open filtered Transactions.
-            </div>
-          </SectionCard>
+       <SectionCard title="Mood vs Average Spend">
+  <div className="h-56">
+    <ResponsiveContainer>
+      <RBarChart data={windowed.perMood.filter(d =>
+        d.mood === 'happy' || d.mood === 'neutral' || d.mood === 'sad'
+      )}>
+        <CartesianGrid strokeDasharray="3 3" vertical={false} />
+        <XAxis dataKey="mood" />
+        <YAxis />
+        <Tooltip formatter={(v: number) => fmtCurrency(v)} />
+        <Bar dataKey="avg" fill="#E25D37" />
+      </RBarChart>
+    </ResponsiveContainer>
+  </div>
+  <div className="mt-2 text-sm text-gray-600">
+    Tip: click a bar to open filtered Transactions.
+  </div>
+</SectionCard>
+
         </div>
 
         {/* C. Recommendations */}

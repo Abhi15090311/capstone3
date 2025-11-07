@@ -66,9 +66,22 @@ function dateFromPreset(preset: DatePreset): Date | undefined {
 }
 
 
+
 export default function Transactions() {
   const [params, setParams] = useSearchParams()
   const [all, setAll] = useState<Tx[]>(() => loadTxns())
+ const onboardingBalance = Number(localStorage.getItem('currentBalance')) || 0;
+
+  const currentTxTotal = useMemo(() => {
+    let total = 0;
+    all.forEach((tx: Tx) => {
+      if (tx.type === 'expense') total -= tx.amount;
+      if (tx.type === 'income') total += tx.amount;
+    });
+    return total;
+  }, [all]);
+
+  const actualCurrentBalance = onboardingBalance + currentTxTotal;
   const [query, setQuery] = useState(params.get('q') ?? '')
   const [category, setCategory] = useState<string>(params.get('category') ?? '')
   const [nwg, setNWG] = useState<NWG | ''>((params.get('nwg') as NWG) ?? '')
@@ -81,6 +94,10 @@ export default function Transactions() {
   const [sort, setSort] = useState<SortKey>((params.get('sort') as SortKey) ?? 'date_desc')
   const [filtersOpen, setFiltersOpen] = useState<boolean>(params.get('f') !== '0')
   const [openKind, setOpenKind] = useState<null | 'expense' | 'income'>(null)
+  const [editTx, setEditTx] = useState<Tx | null>(null)
+
+
+
 
 
   useEffect(() => {
@@ -484,17 +501,27 @@ function deleteTx(id: string) {
           </span>
         </td>
         <td className="px-2 py-3 text-right">
-          <button
-            className="rounded-lg px-2 py-1 hover:bg-cream text-blue-600"
-            title="Edit transaction"
-            onClick={() => {
-              // setEditTx(t) or your editing logic
-              console.log('Edit transaction:', t)
-            }}
-          >
-            Edit
-          </button>
-        </td>
+  <button
+    className="rounded-lg px-2 py-1 hover:bg-cream text-blue-600"
+    title="Edit transaction"
+    onClick={() => setEditTx(t)}
+  >
+    Edit
+  </button>
+  <button
+    className="rounded-lg px-2 py-1 hover:bg-red-50 text-red-600"
+    title="Delete transaction"
+    style={{ marginLeft: '0.5rem' }}
+    onClick={() => {
+      if (window.confirm('Are you sure you want to delete this transaction?')) {
+        deleteTx(t.id)
+      }
+    }}
+  >
+    Delete
+  </button>
+</td>
+
       </tr>
     )
   })}
@@ -511,14 +538,29 @@ function deleteTx(id: string) {
           </table>
         </div>
       </div>
-      {openKind && (
-        <AddTxModal
-          kind={openKind}
-          onClose={() => setOpenKind(null)}
-          onSaveTransaction={handleSave}
-          onSaveBill={handleSaveBill}
-        />
-      )}
+     {openKind && !editTx && (
+  <AddTxModal
+    kind={openKind}
+    onClose={() => setOpenKind(null)}
+    onSaveTransaction={handleSave}
+    onSaveBill={handleSaveBill}
+  />
+)}
+{editTx && (
+  <AddTxModal
+    kind={editTx.type}
+    initialData={editTx}
+    onClose={() => setEditTx(null)}
+    onSaveTransaction={updatedTx => {
+      const updated = all.map(tx => tx.id === updatedTx.id ? updatedTx : tx)
+      saveTxns(updated)
+      setAll(updated)
+      setEditTx(null)
+    }}
+    onSaveBill={handleSaveBill}
+  />
+)}
+
     </AppLayout>
   )
 } 

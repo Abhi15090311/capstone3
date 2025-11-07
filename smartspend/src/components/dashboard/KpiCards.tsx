@@ -40,7 +40,39 @@ function loadBills() {
 export function BalanceCard() {
   const navigate = useNavigate()
 
-  const balance = useCurrentBalance()
+ // 1. Get onboarding/set balance (same as before)
+const onboardingBalance = Number(localStorage.getItem('currentBalance')) || 0
+
+// 2. Load ALL transactions, sum incomes & expenses for live net movement
+const loadTransactions = () => {
+  try {
+    const raw = localStorage.getItem('smartspend.txns')
+    if (raw) return JSON.parse(raw)
+  } catch {}
+  return transactions // fallback to your mock data if nothing in storage
+}
+const [txns, setTxns] = useState(() => loadTransactions())
+useEffect(() => {
+  function update() {
+    setTxns(loadTransactions())
+  }
+  window.addEventListener('storage', update)
+  window.addEventListener('focus', update)
+  return () => {
+    window.removeEventListener('storage', update)
+    window.removeEventListener('focus', update)
+  }
+}, [])
+
+// 3. Calculate the live, real balance
+const actualCurrentBalance = onboardingBalance +
+  txns.reduce((sum: number, tx: { type: string; amount: number }) =>
+    tx.type === 'expense' ? sum - tx.amount
+    : tx.type === 'income' ? sum + tx.amount
+    : sum
+  , 0)
+
+
   const [bills, setBills] = useState(() => loadBills())
 
   // Update bills when localStorage changes (react to edits in /bills)
@@ -60,12 +92,14 @@ export function BalanceCard() {
   const billsTotal = bills
     .filter((b: any) => (b.status ?? 'active') !== 'paused')
     .reduce((s: number, b: any) => s + b.amount, 0)
-  const afterBills = balance - billsTotal
+  const afterBills = actualCurrentBalance - billsTotal
+
 
   const originalBalance = getOriginalBalance()
  
 
-const pctLeft = (balance / originalBalance) * 100
+const pctLeft = (actualCurrentBalance / originalBalance) * 100
+
 
 let barColor = 'bg-emerald-500'         // Green
 if (pctLeft <= 10) {
@@ -87,12 +121,13 @@ if (pctLeft <= 10) {
     >
       <Card>
         <CardTitle>Current Balance</CardTitle>
-        <div className="text-3xl font-bold">{formatCurrency(balance)}</div>
+    <div className="text-3xl font-bold">{formatCurrency(actualCurrentBalance)}</div>
         <p className="mt-1 text-sm text-gray-600">
           After upcoming bills: {formatCurrency(afterBills)}
         </p>
         <div className="mt-3">
-          <ProgressBar value={balance} max={originalBalance} barColor={barColor} />
+         <ProgressBar value={actualCurrentBalance} max={originalBalance} barColor={barColor} />
+
         </div>
       </Card>
     </div>

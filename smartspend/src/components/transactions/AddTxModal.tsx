@@ -19,12 +19,14 @@ export default function AddTxModal({
   onClose,
   onSaveTransaction,
   onSaveBill,
+  onDelete,
 }: {
   kind: Kind
   initialData?: Tx
   onClose: () => void
   onSaveTransaction: (tx: Tx) => void
   onSaveBill: (bill: any) => void
+  onDelete?: (id: string) => void 
 }){
   const now = useMemo(() => new Date(), [])
   const [step, setStep] = useState<1|2|3|4|5|6|7>(1)
@@ -104,19 +106,20 @@ const handleSaveExpense = () => {
 
   
   setErr('')
-  onSaveTransaction({
-    id: crypto.randomUUID(),
-    type: kind,
-    amount,
-    occurred_at: now.toISOString(),
-    merchant,
-    time,
-    nwg: kind === 'income' ? null : nwg,
-    late_night: false,
- payDay,
-    mood,
-    note: '',
-  })
+onSaveTransaction({
+  id: initialData?.id ?? crypto.randomUUID(),
+  type: kind,
+  amount,
+  occurred_at: initialData?.occurred_at ?? now.toISOString(),
+  merchant,
+  time,
+  nwg: kind === 'income' ? null : nwg,
+  late_night: false,
+  payDay,
+  mood,
+  note: initialData?.note ?? '',
+})
+
     if (addMore) resetForm()
   else onClose()
 }
@@ -381,6 +384,7 @@ setShowDayModal(true)
                 />
                 Save & add another
               </label>
+
               <div className="flex items-center gap-2">
                 <button onClick={onClose} className="btn-ghost">
                   Cancel
